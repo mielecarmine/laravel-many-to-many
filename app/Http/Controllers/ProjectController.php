@@ -71,7 +71,7 @@ class ProjectController extends Controller
     {
         $techs = Technology::orderBy('label')->get();
         $project_tech = $project->technologies->pluck('id')->toArray();
-        return view('admin.projects.edit', compact('project'));
+        return view('admin.projects.edit', compact('project','techs','project_tech'));
     }
 
     /**
@@ -91,7 +91,7 @@ class ProjectController extends Controller
         else
             $project->technologies()->detach();
 
-        return redirect()->route('admin.projects.show', compact('project','techs','project_techs'));
+        return redirect()->route('admin.projects.show', $project);
     }
 
     /**
@@ -112,7 +112,7 @@ class ProjectController extends Controller
             [
                 'name'=>'required|string|max:30',
                 'type_id'=>'required|integer|between:1,3',
-                'description'=>'required|string|max:500',
+                'description'=>'required|string|max:750',
                 'link'=>'nullable',
                 'techs'=>'nullable|exists:technologies,id',
             ],
