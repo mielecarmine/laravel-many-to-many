@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Technology;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Arr;
 
 class ProjectController extends Controller
 {
@@ -26,7 +28,9 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        return view('admin.projects.create');
+        $project = new Project;
+        $techs = Technology::orderBy('label')->get();
+        return view('admin.projects.create', compact('project', 'techs'));
     }
 
     /**
@@ -41,6 +45,8 @@ class ProjectController extends Controller
         $project = new Project;
         $project->fill($data);
         $project->save();
+        if(Arr::exists($data, "techs")) $project->technologies()->attach($data["techs"]);
+
         return redirect()->route('admin.projects.show', $project);
     }
 
@@ -52,8 +58,6 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        // $project = Project::findOrFail($project->id);
-        // dd($project->type);
         return view('admin.projects.show', compact('project'));
     }
 
@@ -65,6 +69,8 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
+        $techs = Technology::orderBy('label')->get();
+        $project_tech = $project->technologies->pluck('id')->toArray();
         return view('admin.projects.edit', compact('project'));
     }
 
@@ -79,7 +85,13 @@ class ProjectController extends Controller
     {
         $data = $this->validation($request->all());
         $project->update($data);
-        return redirect()->route('admin.projects.show', $project);
+
+        if(Arr::exists($data, "techs"))
+            $project->technologies()->sync($data["techs"]);
+        else
+            $project->technologies()->detach();
+
+        return redirect()->route('admin.projects.show', compact('project','techs','project_techs'));
     }
 
     /**
@@ -99,13 +111,15 @@ class ProjectController extends Controller
             $data,
             [
                 'name'=>'required|string|max:30',
-                'types_id'=>'required|integer|between:1,3',
+                'type_id'=>'required|integer|between:1,3',
                 'description'=>'required|string|max:500',
-                'link'=>'nullable'
+                'link'=>'nullable',
+                'techs'=>'nullable|exists:technologies,id',
             ],
             [
                 'name.required'=>'Il nome è obbligatorio',
                 'description.required'=>'La descrizione è richiesta',
+                'techs.exists'=>'Le tecnologie selezionate non sono valide'
             ]
         )->validate();
     }

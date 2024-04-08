@@ -34,6 +34,31 @@
             <option value="3">FullStack</option>
             </select>
           </div>
+
+          <label class="form-label">Tecnologie utilizzate:</label>
+
+        <div class="form-check @error('techs') is-invalid @enderror p-0">
+          @foreach ($techs as $tech)
+            <input
+              type="checkbox"
+              id="tech-{{ $tech->id }}"
+              value="{{ $tech->id }}"
+              name="techs[]"
+              class="form-check-control"
+              @if (in_array($tech->id, old('techs', $project_techs ?? []))) checked @endif
+            >
+            <label for="tech-{{ $tech->id }}">
+              {{ $tech->label }}
+            </label>
+            <br>
+          @endforeach
+        </div>
+
+        @error('techs')
+          <div class="invalid-feedback">
+            {{ $message }}
+          </div>
+        @enderror
           <button type="submit" class="btn mt-3 btn-primary">Modifica</button>
         </form>
       </div>
